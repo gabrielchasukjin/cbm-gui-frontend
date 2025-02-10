@@ -40,6 +40,10 @@ PORT=3050 npm start
 ```
 This will start the React frontend server on port 3050.
 
+### Communication
+The frontend communicates with the backend at [http://localhost:5000](http://localhost:5000). Ensure both are running for full functionality.  
+Access the backend repo through this link: [CBM-GUI-Backend](https://github.com/sxluong/CBM-GUI-Backend)
+
 ### Project Goal
 Now that we have a basic foundation of CBL. Our project addresses to develop a user-friendly GUI that automates much of the technical complexity involved in integrating and interacting with CBLs in LLMs. Weng et al. (2024) developed an automated pipeline to integrate CBLs into LLMs, but it  requires users to run technical scripts. The GUI is designed with five main interfaces that guide the user through the process of integrating a CBL into an LLM, from dataset selection to model experimentation and history tracking.
 
