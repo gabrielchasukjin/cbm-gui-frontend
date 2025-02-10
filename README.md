@@ -1,70 +1,67 @@
-# Getting Started with Create React App
+# ConceptBottleneck-GUI-Experiment
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project builds on Weng et al. (2024) [Crafting Large Language Models for Enhanced Interpretability](https://arxiv.org/abs/2407.04307) by developing a user-friendly GUI for integrating Concept Bottleneck Layers (CBLs) into Large Language Models (LLMs). Weng's Concept Bottleneck Large Language Model (CB-LLM) combines high accuracy, scalability, and interpretability, setting a new standard for transparent AI.
 
-## Available Scripts
+Our GUI simplifies the process, enabling users of all skills levels to visualize concept activations, adjust weights, and unlearn biases, promoting interpretability, fairness, and trustworthiness.
 
-In the project directory, you can run:
 
-### `npm start`
+![CB LLM Framework](fig/cbllm.png)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Project Structure
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- `src/`: Core source code for the project, including:  
+  - `app.js`: Core React frontend code responsible for handling user interactions and making API calls to the backend repo .  
+  - `index.js`: Entry point for executing `app.js` in the React frontend.  
+- `public/`: Static assets for the GUI frontend, managed by React.  
+- `package.json`: Defines Node.js dependencies for the React frontend.  
 
-### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## How to Run the Project
 
-### `npm run build`
+### 1. Set Up the Environment
+#### Create and activate a virtual environment:
+```bash
+python -m venv cbm_env  # Create virtual environment
+source cbm_env/bin/activate  # Activate it on macOS/Linux
+cbm_env\Scripts\activate  # Activate it on Windows
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 2. Frontend Setup
+#### Install Node.js dependencies:
+```bash
+npm install
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 3. Running the Project
+#### Start the Frontend. From the root folder, run:
+```bash
+PORT=3050 npm start
+```
+This will start the React frontend server on port 3050.
 
-### `npm run eject`
+### Project Goal
+Now that we have a basic foundation of CBL. Our project addresses to develop a user-friendly GUI that automates much of the technical complexity involved in integrating and interacting with CBLs in LLMs. Weng et al. (2024) developed an automated pipeline to integrate CBLs into LLMs, but it  requires users to run technical scripts. The GUI is designed with five main interfaces that guide the user through the process of integrating a CBL into an LLM, from dataset selection to model experimentation and history tracking.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+![CB LLM Framework](fig/new.png)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Minimal Viable Product
+The user interface depicted above represents our ultimate vision and serves as the primary inspiration for this project. Our aim is to create an intuitive and accessible platform that enables users to seamlessly integrate Concept Bottleneck Layers (CBLs) into Large Language Models (LLMs). This interface embodies the goal of fostering transparency, fairness, and trust in AI systems.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Currently, we are focused on developing a minimal viable product (MVP) that captures the core functionality of this vision. The MVP will provide essential features such as model configuration, concept visualization, and bias mitigation. 
 
-## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Home Page MVP 
+The home page of the CBM-GUI Minimum Viable Product (MVP) allows users to select hardware, train the Concept Bottleneck Layer (CBL), and classify inputs.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Users can choose to train the CBL layer on either local hardware or the DSMPL UCSD server. ***Currently the backend defaults to local hardward.*** Once the hardware is selected, users can click "Train" to start the training process. Training duration varies based on the hardware, typically taking between 5 to 45 minutes.
 
-### Code Splitting
+For the MVP, the model is pre-selected as a fine-tuned RoBERTa model from Google, and the CBL layer is trained on the SetFit SST2 dataset, which includes 6,920 movie review samples labeled as positive or negative. After training, users can input text for classification and view the top concept contributions that influenced the model's decision-making process.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
 
-### Analyzing the Bundle Size
+![CB LLM Framework](fig/bubble.png)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+The figure above demonstrates the CBM-GUI's ability to classify text and highlight the top concept contributions influencing the model's decision-making process. For the input "The plot was written by a 5-year-old," the model identifies key concepts such as "Disjointed narrative structure," "Lack of thematic depth," "Incoherent storytelling," and "Weak or poorly developed plot" as the primary drivers behind the classification. These contributions are visually represented in a bar chart, where the activation levels of each concept indicate their relative importance. This functionality provides users with a clear and interpretable view of how the model reaches its conclusions.
 
-### Making a Progressive Web App
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
