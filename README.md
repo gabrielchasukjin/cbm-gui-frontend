@@ -46,17 +46,20 @@ Now that we have a basic foundation of CBL. Our project addresses to develop a u
 
 ![CB LLM Framework](fig/new.png)
 
-### MApplication Architecture and Features
+### Application Architecture and Features
 We have moved beyond the Minimal Viable Product (MVP) stage and developed a full ap-
 plication with microservices, database storage, and a structured backend-frontend system.
 The application features a Django backend, React frontend, and SQLite3 database for model
 storage.
+
 The CBM-GUI is designed to provide users with an intuitive and interactive experience for
 training, visualizing, and refining Concept Bottleneck Layers in LLMs. Users can:
-• Train multiple models in separate tabs with different configurations.
-• View real-time progress of training and see concept activation visualizations.
-• Analyze the top contributing concepts for each model decision.
-• Save trained models to the SQLite3 database for future use and comparisons.
+
+- Train multiple models in separate tabs with different configurations.
+- View real-time progress of training and see concept activation visualizations.
+- Analyze the top contributing concepts for each model decision.
+- Save trained models to the SQLite3 database for future use and comparisons.
+
 The GUI simplifies the process of integrating CBLs into LLMs by providing clear workflows
 and real-time visual feedback, making advanced interpretability tools accessible to both
 researchers and practitioners.
