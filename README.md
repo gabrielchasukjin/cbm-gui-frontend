@@ -46,22 +46,24 @@ Now that we have a basic foundation of CBL. Our project addresses to develop a u
 
 ![CB LLM Framework](fig/new.png)
 
-### Minimal Viable Product
-The user interface depicted above represents our ultimate vision and serves as the primary inspiration for this project. Our aim is to create an intuitive and accessible platform that enables users to seamlessly integrate Concept Bottleneck Layers (CBLs) into Large Language Models (LLMs). This interface embodies the goal of fostering transparency, fairness, and trust in AI systems.
-
-Currently, we are focused on developing a minimal viable product (MVP) that captures the core functionality of this vision. The MVP will provide essential features such as model configuration, concept visualization, and bias mitigation. 
-
-
-### Home Page MVP 
-The home page of the CBM-GUI Minimum Viable Product (MVP) allows users to select hardware, train the Concept Bottleneck Layer (CBL), and classify inputs.
-
-Users can choose to train the CBL layer on either local hardware or the DSMPL UCSD server. ***Currently the backend defaults to local hardward.*** Once the hardware is selected, users can click "Train" to start the training process. Training duration varies based on the hardware, typically taking between 5 to 45 minutes.
-
-For the MVP, the model is pre-selected as a fine-tuned RoBERTa model from Google, and the CBL layer is trained on the SetFit SST2 dataset, which includes 6,920 movie review samples labeled as positive or negative. After training, users can input text for classification and view the top concept contributions that influenced the model's decision-making process.
+### MApplication Architecture and Features
+We have moved beyond the Minimal Viable Product (MVP) stage and developed a full ap-
+plication with microservices, database storage, and a structured backend-frontend system.
+The application features a Django backend, React frontend, and SQLite3 database for model
+storage.
+The CBM-GUI is designed to provide users with an intuitive and interactive experience for
+training, visualizing, and refining Concept Bottleneck Layers in LLMs. Users can:
+• Train multiple models in separate tabs with different configurations.
+• View real-time progress of training and see concept activation visualizations.
+• Analyze the top contributing concepts for each model decision.
+• Save trained models to the SQLite3 database for future use and comparisons.
+The GUI simplifies the process of integrating CBLs into LLMs by providing clear workflows
+and real-time visual feedback, making advanced interpretability tools accessible to both
+researchers and practitioners.
 
 
 ![CB LLM Framework](fig/bubble.png)
 
-The figure above demonstrates the CBM-GUI's ability to classify text and highlight the top concept contributions influencing the model's decision-making process. For the input "The plot was written by a 5-year-old," the model identifies key concepts such as "Disjointed narrative structure," "Lack of thematic depth," "Incoherent storytelling," and "Weak or poorly developed plot" as the primary drivers behind the classification. These contributions are visually represented in a bar chart, where the activation levels of each concept indicate their relative importance. This functionality provides users with a clear and interpretable view of how the model reaches its conclusions.
+The figure above demonstrates the CBM-GUI's ability to classify text and highlight the top concept contributions influencing the model's decision-making process. For the input "The plot was written by a 5-year-old," the model identifies key concepts such as "Disjointed narrative structure," "Lack of thematic depth," "Incoherent storytelling," and "Weak or poorly developed plot" as the primary drivers behind the classification. These contributions are visually represented in a bubble chart, where the circular area of each concept indicate their relative importance. This functionality provides users with a clear and interpretable view of how the model reaches its conclusions.
 
 
