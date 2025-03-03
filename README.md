@@ -3,6 +3,8 @@
 This project builds on Weng et al. (2024) *Crafting Large Language Models for Enhanced Interpretability* by developing a user-friendly GUI for integrating Concept Bottleneck Layers (CBLs) into Large Language Models (LLMs). Weng's Concept Bottleneck Large Language Model (CB-LLM) combines high accuracy, scalability, and interpretability, setting a new standard for transparent AI.  
 Our GUI simplifies the process, enabling users of all skill levels to visualize concept activations, adjust weights, and unlearn biases, promoting interpretability, fairness, and trustworthiness.
 
+![Example Image](fig/cbllm.png)
+
 ---
 
 ## Project Structure
