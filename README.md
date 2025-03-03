@@ -50,11 +50,10 @@ Access the backend repo through this link: [CBM-GUI-Backend](https://github.com/
 Now that we have a basic foundation of CBL, our project aims to develop a user-friendly GUI that automates much of the technical complexity involved in integrating and interacting with CBLs in LLMs. Weng et al. (2024) developed an automated pipeline to integrate CBLs into LLMs, but it requires users to run technical scripts.
 The GUI is designed with five main interfaces that guide the user through the process of integrating a CBL into an LLM, from dataset selection to model experimentation and history tracking.
 
----
+![Example Image](fig/new.png)
 
 # Application Architecture and Features
 We have moved beyond the Minimal Viable Product (MVP) stage and developed a full application with microservices, database storage, and a structured backend-frontend system. The application features a Django backend, React frontend, and SQLite3 database for model storage.
-![Example Image](fig/new.png)
 The CBM-GUI is designed to provide users with an intuitive and interactive experience for training, visualizing, and refining Concept Bottleneck Layers in LLMs. Users can:
 - Train multiple models in separate tabs with different configurations.
 - View real-time progress of training and see concept activation visualizations.
