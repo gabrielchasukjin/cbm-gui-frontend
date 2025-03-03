@@ -42,7 +42,7 @@ This will start the React frontend server on port 3050.
 
 ### 4. Communication
 The frontend communicates with the backend at `http://localhost:5050`. Ensure both are running for full functionality.
-Access the backend repo through this link: CBM-GUI-Backend
+Access the backend repo through this link: [CBM-GUI-Backend](https://github.com/sxluong/CBM-GUI-Backend)
 
 ---
 
@@ -54,6 +54,7 @@ The GUI is designed with five main interfaces that guide the user through the pr
 
 # Application Architecture and Features
 We have moved beyond the Minimal Viable Product (MVP) stage and developed a full application with microservices, database storage, and a structured backend-frontend system. The application features a Django backend, React frontend, and SQLite3 database for model storage.
+![Example Image](fig/new.png)
 The CBM-GUI is designed to provide users with an intuitive and interactive experience for training, visualizing, and refining Concept Bottleneck Layers in LLMs. Users can:
 - Train multiple models in separate tabs with different configurations.
 - View real-time progress of training and see concept activation visualizations.
