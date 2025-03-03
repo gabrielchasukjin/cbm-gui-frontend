@@ -9,7 +9,14 @@ import {
   TextField,
   AppBar,
   ToggleButton,
-  ToggleButtonGroup
+  ToggleButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Chip,
+  LinearProgress,
+  Paper
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -47,6 +54,11 @@ class ModelTab extends Component {
       classificationError: null,
       chartView: 'bar',  // Add this to track which visualization to show
       simulation: null,
+      numConceptsToShow: 5,  // Add this
+      selectedConcept: null,  // Add this to track which concept is selected
+      conceptDialogOpen: false,  // Add this to control dialog visibility
+      showAllConcepts: false,  // Add this new state property
+      conceptFilter: 'all', // Add this for filtering concepts
     };
     this.bubbleChartRef = React.createRef();
   }
@@ -139,16 +151,22 @@ class ModelTab extends Component {
       console.log('Model data received:', response.data); // Debug log
       console.log('Model exists:', modelExists); // Debug log
       
-      this.setState({ 
-        modelData: response.data,
-        loading: false,
-        modelExists,
-        // Only set selected options if model actually exists
-        ...(modelExists && {
-          selectedDataset: response.data.concept_dataset || "",
-          selectedModel: response.data.backbone || ""
-        })
-      });
+      if (modelExists) {
+        // Set both the model data and the selected options from the response
+        this.setState({ 
+          modelData: response.data,
+          selectedDataset: response.data.concept_dataset,
+          selectedModel: response.data.backbone,
+          modelExists: true,
+          loading: false
+        });
+      } else {
+        this.setState({
+          modelData: null,
+          modelExists: false,
+          loading: false
+        });
+      }
     } catch (error) {
       this.setState({ 
         error: 'Error fetching data from server',
@@ -266,6 +284,85 @@ class ModelTab extends Component {
     }
   };
 
+  handleShowMoreConcepts = () => {
+    this.setState(prevState => ({
+      numConceptsToShow: prevState.numConceptsToShow + 5
+    }));
+  };
+
+  handleShowLessConcepts = () => {
+    this.setState({ showAllConcepts: false });
+  };
+
+  handleConceptCardClick = (concept) => {
+    this.setState({
+      selectedConcept: concept,
+      conceptDialogOpen: true
+    });
+  };
+
+  handleDialogClose = () => {
+    this.setState({
+      conceptDialogOpen: false
+    });
+  };
+
+  getPredictionText = (prediction) => {
+    // Flip the interpretation - 0 is Negative, 1 is Positive
+    return prediction === 1 ? "Positive" : "Negative";
+  };
+
+  getConceptImpactDescription = (conceptActivation, maxActivation, finalPrediction) => {
+    const relativeStrength = conceptActivation / maxActivation;
+    const sentiment = this.getPredictionText(finalPrediction).toLowerCase();
+    
+    if (conceptActivation === 0) {
+      return {
+        text: 'No contribution to classification',
+        strengthWord: '',
+        color: 'text.secondary'
+      };
+    }
+    
+    if (relativeStrength > 0.8) {
+      return {
+        text: 'supports classification',
+        strengthWord: 'Strongly',
+        color: '#2e7d32' // Strong green
+      };
+    }
+    
+    if (relativeStrength > 0.5) {
+      return {
+        text: 'supports classification',
+        strengthWord: 'Moderately',
+        color: '#ffd700' // Gold/yellow
+      };
+    }
+    
+    if (relativeStrength > 0.2) {
+      return {
+        text: 'supports classification',
+        strengthWord: 'Weakly',
+        color: '#ffa726' // Orange
+      };
+    }
+    
+    return {
+      text: 'supports classification',
+      strengthWord: 'Minimally',
+      color: '#ffb74d' // Light orange
+    };
+  };
+
+  handleExpandAllConcepts = () => {
+    this.setState({ showAllConcepts: true });
+  };
+
+  handleFilterChange = (filter) => {
+    this.setState({ conceptFilter: filter });
+  };
+
   renderConceptChart = () => {
     const { classificationResult } = this.state;
     if (!classificationResult || !classificationResult.top_concepts) return null;
@@ -316,15 +413,18 @@ class ModelTab extends Component {
     const { classificationResult } = this.state;
     if (!classificationResult || !classificationResult.top_concepts) return null;
 
-    const bubbleData = classificationResult.top_concepts.map(item => ({
-      radius: Math.max(35, item.activation * 45), // Match the sizes from simulation
-      concept: item.concept,
-      activation: item.activation
-    }));
+    // Only take top 5 concepts for clearer visualization
+    const bubbleData = classificationResult.top_concepts
+      .slice(0, 5)  // Changed from all concepts to just top 5
+      .map(item => ({
+        radius: Math.max(45, item.activation * 60), // Increased base size since we have fewer bubbles
+        concept: item.concept,
+        activation: item.activation
+      }));
 
     return (
-      <Box sx={{ mt: 3, height: 700, position: 'relative' }}> {/* Increased height */}
-        <Typography variant="h6">Concept Activations Bubble View</Typography>
+      <Box sx={{ mt: 3, height: 500 }}> {/* Reduced height since we have fewer bubbles */}
+        <Typography variant="h6">Top 5 Concept Activations</Typography>
         <Box 
           ref={this.bubbleChartRef}
           sx={{ 
@@ -364,7 +464,7 @@ class ModelTab extends Component {
             >
               <Typography
                 sx={{
-                  fontSize: Math.max(12, bubble.radius / 3), // Slightly larger minimum font size
+                  fontSize: Math.max(14, bubble.radius / 3), // Slightly larger font size
                   color: 'white',
                   textAlign: 'center',
                   padding: 1,
@@ -407,11 +507,336 @@ class ModelTab extends Component {
     );
   };
 
+  renderConceptVisualization = () => {
+    const { classificationResult, showAllConcepts, selectedConcept, conceptDialogOpen, conceptFilter } = this.state;
+    if (!classificationResult || !classificationResult.top_concepts) return null;
+
+    // Filter concepts based on their strength
+    const filterConcepts = (concepts) => {
+      if (conceptFilter === 'all') return concepts;
+      
+      return concepts.filter(concept => {
+        const relativeStrength = concept.activation / Math.max(...concepts.map(c => c.activation));
+        if (conceptFilter === 'strong' && relativeStrength > 0.8) return true;
+        if (conceptFilter === 'moderate' && relativeStrength > 0.5 && relativeStrength <= 0.8) return true;
+        if (conceptFilter === 'weak' && relativeStrength > 0.2 && relativeStrength <= 0.5) return true;
+        if (conceptFilter === 'minimal' && relativeStrength <= 0.2) return true;
+        return false;
+      });
+    };
+
+    const filteredConcepts = filterConcepts(classificationResult.top_concepts);
+    const displayConcepts = showAllConcepts 
+      ? filteredConcepts 
+      : filteredConcepts.slice(0, 10);
+    
+    const maxActivation = Math.max(...classificationResult.top_concepts.map(c => c.activation));
+    const hasMoreConcepts = filteredConcepts.length > 10;
+
+    return (
+      <Box sx={{ mt: 3 }}>
+        {/* Header with filter and show/hide buttons */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          mb: 4  // Increased from mb: 2 to mb: 4 for more spacing
+        }}>
+          <Typography variant="h6">
+            {showAllConcepts ? 'All Concept Activations' : 'Top 10 Concept Activations'}
+          </Typography>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 1,
+            '& .MuiToggleButtonGroup-root': {  // Add some padding to the button group
+              p: 0.5,
+              bgcolor: '#f5f5f5',
+              borderRadius: 1
+            }
+          }}>
+            <ToggleButtonGroup
+              value={conceptFilter}
+              exclusive
+              onChange={(e, newFilter) => newFilter && this.handleFilterChange(newFilter)}
+              size="small"
+            >
+              <ToggleButton value="all">
+                All
+              </ToggleButton>
+              <ToggleButton value="strong" sx={{ color: '#2e7d32' }}>
+                Strong
+              </ToggleButton>
+              <ToggleButton value="moderate" sx={{ color: '#ffd700' }}>
+                Moderate
+              </ToggleButton>
+              <ToggleButton value="weak" sx={{ color: '#ffa726' }}>
+                Weak
+              </ToggleButton>
+              <ToggleButton value="minimal" sx={{ color: '#ffb74d' }}>
+                Minimal
+              </ToggleButton>
+            </ToggleButtonGroup>
+            {showAllConcepts && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={this.handleShowLessConcepts}
+                sx={{ minWidth: 'auto' }}
+              >
+                Show Top 10
+              </Button>
+            )}
+          </Box>
+        </Box>
+        
+        {/* Concept Cards Layout */}
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 3,
+          mt: 2 
+        }}>
+          {/* Cards Container */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: 2,
+            justifyContent: 'center',
+          }}>
+            {displayConcepts.map((concept, index) => {
+              const relativeSize = (concept.activation / maxActivation) * 100;
+              const colorIntensity = Math.floor((concept.activation / maxActivation) * 100);
+              
+              return (
+                <Box
+                  key={index}
+                  onClick={() => this.handleConceptCardClick(concept)}
+                  sx={{
+                    position: 'relative',
+                    width: 200,
+                    height: 220,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    bgcolor: 'white',
+                    borderRadius: 4,
+                    boxShadow: 1,
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: `0 0 ${relativeSize}px ${colorIntensity/2}px rgba(136, 132, 216, ${concept.activation})`,
+                    }
+                  }}
+                >
+                  {/* Circular Progress */}
+                  <Box sx={{
+                    position: 'relative',
+                    width: 120,
+                    height: 120,
+                    borderRadius: '50%',
+                    background: `conic-gradient(
+                      #8884d8 ${(concept.activation / maxActivation) * 360}deg,
+                      #f0f0f0 ${(concept.activation / maxActivation) * 360}deg
+                    )`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mt: 2, // Added margin top
+                    mb: 2
+                  }}>
+                    <Box sx={{
+                      width: 100,
+                      height: 100,
+                      borderRadius: '50%',
+                      bgcolor: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.5rem',
+                      fontWeight: 'bold',
+                      color: '#8884d8'
+                    }}>
+                      {concept.activation.toFixed(3)}
+                    </Box>
+                  </Box>
+
+                  {/* Concept Name */}
+                  <Typography
+                    sx={{
+                      fontSize: '1rem',
+                      fontWeight: 500,
+                      textAlign: 'center',
+                      px: 2,
+                      pb: 2, // Added padding bottom
+                      color: '#333',
+                      maxHeight: '3.6em', // Increased max height
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3, // Increased to 3 lines
+                      WebkitBoxOrient: 'vertical'
+                    }}
+                  >
+                    {concept.concept}
+                  </Typography>
+
+                  {/* Rank Badge */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: -10,
+                      left: -10,
+                      width: 30,
+                      height: 30,
+                      borderRadius: '50%',
+                      bgcolor: '#8884d8',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold',
+                      boxShadow: 2
+                    }}
+                  >
+                    {index + 1}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+
+          {/* Expand All Button */}
+          {!showAllConcepts && hasMoreConcepts && (
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={this.handleExpandAllConcepts}
+              sx={{ mt: 2, mb: 2 }}
+            >
+              Show All Concepts ({filteredConcepts.length})
+            </Button>
+          )}
+        </Box>
+
+        {/* Concept Detail Dialog */}
+        <Dialog
+          open={conceptDialogOpen}
+          onClose={this.handleDialogClose}
+          maxWidth="md"
+          fullWidth
+        >
+          {selectedConcept && (
+            <>
+              <DialogTitle>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography variant="h6">
+                    Concept Details
+                  </Typography>
+                  <Chip 
+                    label={`Activation: ${selectedConcept.activation.toFixed(3)}`}
+                    color="primary"
+                  />
+                </Box>
+              </DialogTitle>
+              <DialogContent>
+                <Box sx={{ py: 2 }}>
+                  {/* Concept Name */}
+                  <Typography variant="h5" sx={{ mb: 2 }}>
+                    {selectedConcept.concept}
+                  </Typography>
+
+                  {/* Input Text */}
+                  <Paper sx={{ p: 2, mt: 1, mb: 3, bgcolor: '#f5f5f5' }}>
+                    <Typography variant="body2" component="div" sx={{ fontStyle: 'italic' }}>
+                      "{classificationResult.input_text}"
+                    </Typography>
+                  </Paper>
+
+                  {/* Relative Strength */}
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle1" color="primary" sx={{ mb: 1 }}>
+                      Relative Strength
+                    </Typography>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={(selectedConcept.activation / maxActivation) * 100}
+                      sx={{ height: 10, borderRadius: 5 }}
+                    />
+                    <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+                      {`${((selectedConcept.activation / maxActivation) * 100).toFixed(1)}% of maximum activation`}
+                    </Typography>
+                  </Box>
+
+                  {/* Concept Impact */}
+                  <Box>
+                    <Typography variant="subtitle1" color="primary" sx={{ mb: 1 }}>
+                      Impact on Classification
+                    </Typography>
+                    {(() => {
+                      const impact = this.getConceptImpactDescription(
+                        selectedConcept.activation,
+                        maxActivation,
+                        classificationResult.final_prediction
+                      );
+                      return (
+                        <Typography sx={{ color: 'text.primary' }}>
+                          {impact.strengthWord && (
+                            <Box component="span" sx={{ 
+                              color: impact.color,
+                              fontWeight: 'bold'
+                            }}>
+                              {impact.strengthWord}
+                            </Box>
+                          )}{' '}
+                          {impact.text}
+                        </Typography>
+                      );
+                    })()}
+                  </Box>
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={this.handleDialogClose}>Close</Button>
+              </DialogActions>
+            </>
+          )}
+        </Dialog>
+      </Box>
+    );
+  };
+
   renderResults = () => {
     const { classificationResult, chartView } = this.state;
+    const isPositive = classificationResult.final_prediction === 1; // Changed condition
 
     return (
       <>
+        {/* Add prediction display */}
+        <Box 
+          sx={{ 
+            mb: 3, 
+            p: 2, 
+            bgcolor: isPositive ? '#e8f5e9' : '#ffebee', // Now green for positive (1), red for negative (0)
+            borderRadius: 2,
+            border: 1,
+            borderColor: isPositive ? '#81c784' : '#ef9a9a'
+          }}
+        >
+          <Typography 
+            variant="h5" 
+            align="center" 
+            sx={{ color: isPositive ? '#2e7d32' : '#c62828' }}
+          >
+            Final Prediction: {this.getPredictionText(classificationResult.final_prediction)}
+          </Typography>
+          <Typography variant="body2" align="center" color="text.secondary">
+            Input Text: "{classificationResult.input_text}"
+          </Typography>
+        </Box>
+
         <Box sx={{ mb: 3 }}>
           <ToggleButtonGroup
             value={chartView}
@@ -422,13 +847,16 @@ class ModelTab extends Component {
             <ToggleButton value="bar" aria-label="bar chart">
               Bar Chart
             </ToggleButton>
-            <ToggleButton value="bubble" aria-label="bubble chart">
-              Bubble View
+            <ToggleButton value="cards" aria-label="concept cards">
+              Concept Cards
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
 
-        {chartView === 'bar' ? this.renderConceptChart() : this.renderBubbleChart()}
+        {chartView === 'bar' ? 
+          this.renderConceptChart() : 
+          this.renderConceptVisualization()
+        }
 
         <Typography variant="h6" sx={{ mt: 3 }}>Full Classification Result:</Typography>
         <pre style={{ 
@@ -506,10 +934,21 @@ class ModelTab extends Component {
               {["SetFit/sst2", "yelp_polarity", "ag_news", "dbpedia_14"].map((dataset) => (
                 <Button
                   key={dataset}
-                  variant={selectedDataset === dataset ? "contained" : "outlined"}
+                  variant={modelData?.concept_dataset === dataset ? "contained" : "outlined"}
                   onClick={() => !modelExists && this.setState({ selectedDataset: dataset })}
-                  disabled={modelExists}
-                  sx={modelExists ? disabledButtonStyle : {}}
+                  disabled={modelExists && modelData?.concept_dataset !== dataset}
+                  sx={{
+                    ...(modelExists && modelData?.concept_dataset === dataset ? {
+                      backgroundColor: 'grey.300',
+                      color: 'text.primary',
+                      '&:hover': {
+                        backgroundColor: 'grey.300'
+                      }
+                    } : modelExists ? {
+                      color: 'grey.500',
+                      borderColor: 'grey.300'
+                    } : {})
+                  }}
                 >
                   {dataset}
                 </Button>
